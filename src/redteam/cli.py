@@ -61,12 +61,6 @@ def version_cmd() -> None:
     typer.echo(__version__)
 
 
-@app.command(name="score")
-def score_cmd() -> None:
-    """[Phase 4] Re-score a cached run without re-querying targets."""
-    _not_yet(4, "score")
-
-
 @app.command(name="report")
 def report_cmd() -> None:
     """[Phase 6] Build a Markdown / HTML report from a scored run."""
@@ -347,3 +341,133 @@ def run_cmd(
         )
     )
     typer.echo(typer.style(f"Wrote: {written}", fg=typer.colors.BRIGHT_BLACK))
+
+
+# ---------------------------------------------------------------------------
+# `redteam score --run <path>` (Phase 4)
+# ---------------------------------------------------------------------------
+
+
+@app.command(name="score")
+def score_cmd(
+    run: Annotated[
+        Path,
+        typer.Option("--run", "-r", help="Path to a RunResult JSON written by `redteam run`."),
+    ],
+    cache_root: Annotated[
+        Path,
+        typer.Option(
+            "--cache-root", help="Where the response cache lives. Judge calls hit this same store."
+        ),
+    ] = Path("data/cache/responses"),
+    budget_usd: Annotated[
+        float,
+        typer.Option("--budget-usd", help="Per-run cap on judge spend in USD."),
+    ] = 2.00,
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output", "-o", help="Where to write the judged JSON. Default: <run>.judged.json"
+        ),
+    ] = None,
+) -> None:
+    """Run the LLM-judge over an existing RunResult JSON and write a judged copy."""
+    import asyncio
+    from decimal import Decimal as _D
+
+    from redteam.budget import BudgetExceeded
+    from redteam.orchestrator import score_run
+
+    if not run.exists():
+        typer.echo(typer.style(f"Run not found: {run}", fg=typer.colors.RED))
+        raise typer.Exit(code=2)
+
+    typer.echo(typer.style(f"Scoring: {run.name}  budget=${budget_usd}", fg=typer.colors.CYAN))
+    try:
+        scored = asyncio.run(
+            score_run(
+                run, cache_root=cache_root, budget_usd=_D(str(budget_usd)), output_path=output
+            )
+        )
+    except BudgetExceeded as exc:
+        typer.echo(typer.style(f"BudgetExceeded: {exc}", fg=typer.colors.RED))
+        raise typer.Exit(code=1) from exc
+
+    out_path = output or run.with_name(run.stem + ".judged.json")
+    typer.echo(
+        typer.style(
+            f"Done. judged={scored.judge_n_judged}  failed={scored.judge_n_failed}  "
+            f"judge_asr={scored.judge_asr_rate:.2%}  judge_refusal={scored.judge_refusal_rate:.2%}  "
+            f"judge cost ${scored.judge_total_cost_usd}",
+            fg=typer.colors.GREEN,
+        )
+    )
+    typer.echo(typer.style(f"Wrote: {out_path}", fg=typer.colors.BRIGHT_BLACK))
+
+
+@app.command(name="export-human-review")
+def export_human_review_cmd(
+    run: Annotated[
+        Path,
+        typer.Option("--run", "-r", help="Path to a (preferably judged) RunResult JSON."),
+    ],
+    sample_pct: Annotated[
+        float,
+        typer.Option("--sample-pct", help="Fraction of cases to sample (0..1). Default 0.05."),
+    ] = 0.05,
+    output: Annotated[
+        Path | None,
+        typer.Option("--output", "-o", help="CSV path. Default: <run>.human-review.csv"),
+    ] = None,
+) -> None:
+    """Export a deterministic ~N% sample of cases as a CSV for human labelling."""
+    from redteam.scorers import export_for_human_review
+
+    if not run.exists():
+        typer.echo(typer.style(f"Run not found: {run}", fg=typer.colors.RED))
+        raise typer.Exit(code=2)
+    out = export_for_human_review(run, sample_pct=sample_pct, output_csv=output)
+    typer.echo(typer.style(f"Wrote: {out}", fg=typer.colors.GREEN))
+    typer.echo(
+        typer.style(
+            "Fill in the human_asr / human_refusal columns (0/1), save, then run "
+            "`redteam kappa --csv <path>` to compute Cohen's kappa.",
+            fg=typer.colors.BRIGHT_BLACK,
+        )
+    )
+
+
+@app.command(name="kappa")
+def kappa_cmd(
+    csv: Annotated[
+        Path,
+        typer.Option("--csv", help="Path to the human-filled review CSV."),
+    ],
+) -> None:
+    """Compute Cohen's kappa between judge and human labels on a filled CSV."""
+    from redteam.scorers import compute_kappa
+
+    if not csv.exists():
+        typer.echo(typer.style(f"CSV not found: {csv}", fg=typer.colors.RED))
+        raise typer.Exit(code=2)
+
+    report = compute_kappa(csv)
+    typer.echo(
+        typer.style(
+            f"n_rows={report.n_rows}  n_human_filled={report.n_human_filled}",
+            fg=typer.colors.CYAN,
+        )
+    )
+    typer.echo(
+        f"  asr      kappa={report.asr.kappa:+.3f}  agreement={report.asr.agreement:.2%}  n={report.asr.n}"
+    )
+    typer.echo(
+        f"  refusal  kappa={report.refusal.kappa:+.3f}  agreement={report.refusal.agreement:.2%}  n={report.refusal.n}"
+    )
+    if report.asr.kappa < 0.6:
+        typer.echo(
+            typer.style(
+                "WARN: ASR kappa < 0.6 (kit acceptance threshold). Review judge prompt or expand the human sample.",
+                fg=typer.colors.YELLOW,
+            )
+        )
