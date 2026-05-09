@@ -20,6 +20,7 @@ arrive in Phase 4.
 from __future__ import annotations
 
 import asyncio
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -147,12 +148,18 @@ class CaseOutcome(BaseModel):
     prompt: str
     response_text: str
     finish_reason: str | None
+    # Rule-based scorer (Phase 3)
     is_refusal: bool
     matched_phrase: str | None
     cost_usd: Decimal
     input_tokens: int
     output_tokens: int
     latency_ms: int
+    # LLM-judge scorer (Phase 4) — None until `redteam score` has been run.
+    judge_asr: int | None = None
+    judge_refusal: int | None = None
+    judge_confidence: float | None = None
+    judge_reasoning: str | None = None
 
 
 class RunResult(BaseModel):
@@ -168,6 +175,15 @@ class RunResult(BaseModel):
     started_at: str
     finished_at: str
     outcomes: list[CaseOutcome]
+    # LLM-judge summary (Phase 4) — populated by `redteam score`. None on
+    # un-judged runs so the JSON stays loadable.
+    judged: bool = False
+    judge_model_version: str | None = None
+    judge_asr_rate: float | None = None
+    judge_refusal_rate: float | None = None
+    judge_total_cost_usd: Decimal | None = None
+    judge_n_judged: int | None = None
+    judge_n_failed: int | None = None
 
 
 async def _run_case(
@@ -261,3 +277,80 @@ def stack_from_ids(
 
 # Suppress unused-warning for typing-only re-export.
 _ = (Defence, Any)
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 — LLM-judge re-scoring of an existing run
+# ---------------------------------------------------------------------------
+
+
+async def score_run(
+    run_path: Path,
+    *,
+    cache_root: Path | None = None,
+    budget_usd: Decimal = Decimal("2.00"),
+    output_path: Path | None = None,
+) -> RunResult:
+    """Read a Phase-3 run JSON, run Claude Haiku 4.5 over every outcome,
+    write a scored RunResult JSON. Does NOT re-query the target — only the
+    judge is called, gated by the response cache.
+
+    The judge has its own per-case cost (~$0.001 at Haiku rates); set
+    `budget_usd` accordingly. Default cap is generous enough for a 100-case
+    run (~$0.10 worst case)."""
+    from redteam.budget import reset_budget
+    from redteam.scorers import JUDGE_MODEL, ClaudeJudge, JudgeError
+
+    reset_budget(max_per_run_usd=budget_usd)
+    cache = ResponseCache(cache_root=cache_root) if cache_root else ResponseCache()
+
+    raw = json.loads(run_path.read_text())
+    result = RunResult.model_validate(raw)
+
+    judge = ClaudeJudge(cache=cache)
+    n_failed = 0
+    new_outcomes: list[CaseOutcome] = []
+    for outcome in result.outcomes:
+        try:
+            verdict = await judge.judge(
+                prompt=outcome.prompt,
+                response_text=outcome.response_text,
+            )
+        except JudgeError:
+            n_failed += 1
+            new_outcomes.append(outcome)
+            continue
+        new_outcomes.append(
+            outcome.model_copy(
+                update={
+                    "judge_asr": verdict.asr,
+                    "judge_refusal": verdict.refusal,
+                    "judge_confidence": verdict.confidence,
+                    "judge_reasoning": verdict.reasoning,
+                }
+            )
+        )
+
+    judged = [o for o in new_outcomes if o.judge_asr is not None]
+    n_judged = len(judged)
+    judge_asr_rate = (sum(o.judge_asr or 0 for o in judged) / n_judged) if n_judged else None
+    judge_refusal_rate = (
+        (sum(o.judge_refusal or 0 for o in judged) / n_judged) if n_judged else None
+    )
+
+    scored = result.model_copy(
+        update={
+            "outcomes": new_outcomes,
+            "judged": True,
+            "judge_model_version": JUDGE_MODEL,
+            "judge_asr_rate": judge_asr_rate,
+            "judge_refusal_rate": judge_refusal_rate,
+            "judge_total_cost_usd": judge.stats.total_cost_usd,
+            "judge_n_judged": n_judged,
+            "judge_n_failed": n_failed,
+        }
+    )
+
+    out = output_path or run_path.with_name(run_path.stem + ".judged.json")
+    out.write_text(scored.model_dump_json(indent=2))
+    return scored
