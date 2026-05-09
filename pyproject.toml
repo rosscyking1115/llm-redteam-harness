@@ -38,6 +38,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+agentdojo = [
+  # Enables the real AgentDojo loader (src/redteam/corpora/agentdojo.py).
+  # AGPL-3.0; we use it as a runtime dependency only — no redistribution.
+  "agentdojo>=0.1",
+]
 dev = [
   "pytest>=8.3",
   "pytest-asyncio>=1.3",
@@ -102,7 +107,7 @@ explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 # Third-party libs without bundled type stubs.
-module = ["ollama.*", "datasets.*", "plotly.*"]
+module = ["ollama.*", "datasets.*", "plotly.*", "agentdojo.*"]
 ignore_missing_imports = true
 
 # ----------------------------------------------------------------------------
