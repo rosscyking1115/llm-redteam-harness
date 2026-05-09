@@ -3,7 +3,7 @@ target: claude-sonnet-4-6
 defences: []
 corpora:
   - source: advbench
-    limit: 50
+    limit: 100
 budget_usd: 1.00
 concurrency: 4
 max_tokens: 256

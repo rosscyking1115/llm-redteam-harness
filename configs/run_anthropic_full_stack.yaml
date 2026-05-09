@@ -7,7 +7,7 @@ defences:
   - id: constitutional      # ~3x cost
 corpora:
   - source: advbench
-    limit: 50
+    limit: 100
 budget_usd: 3.00            # absorb Constitutional's 3x
 concurrency: 2
 max_tokens: 256
