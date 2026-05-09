@@ -333,10 +333,23 @@ async def score_run(
 
     judged = [o for o in new_outcomes if o.judge_asr is not None]
     n_judged = len(judged)
-    judge_asr_rate = (sum(o.judge_asr or 0 for o in judged) / n_judged) if n_judged else None
-    judge_refusal_rate = (
-        (sum(o.judge_refusal or 0 for o in judged) / n_judged) if n_judged else None
-    )
+    judge_asr_count = sum(o.judge_asr or 0 for o in judged)
+    judge_refusal_count = sum(o.judge_refusal or 0 for o in judged)
+    judge_asr_rate = (judge_asr_count / n_judged) if n_judged else None
+    judge_refusal_rate = (judge_refusal_count / n_judged) if n_judged else None
+
+    # ST2.1 — bootstrap CIs on judge proportions (only if we judged any cases)
+    from redteam.stats import bootstrap_proportion_ci
+
+    judge_asr_lo: float | None = None
+    judge_asr_hi: float | None = None
+    judge_ref_lo: float | None = None
+    judge_ref_hi: float | None = None
+    if n_judged:
+        judge_asr_ci = bootstrap_proportion_ci(judge_asr_count, n_judged)
+        judge_ref_ci = bootstrap_proportion_ci(judge_refusal_count, n_judged)
+        judge_asr_lo, judge_asr_hi = judge_asr_ci.lo, judge_asr_ci.hi
+        judge_ref_lo, judge_ref_hi = judge_ref_ci.lo, judge_ref_ci.hi
 
     scored = result.model_copy(
         update={
@@ -348,6 +361,10 @@ async def score_run(
             "judge_total_cost_usd": judge.stats.total_cost_usd,
             "judge_n_judged": n_judged,
             "judge_n_failed": n_failed,
+            "judge_asr_rate_ci_lo": judge_asr_lo,
+            "judge_asr_rate_ci_hi": judge_asr_hi,
+            "judge_refusal_rate_ci_lo": judge_ref_lo,
+            "judge_refusal_rate_ci_hi": judge_ref_hi,
         }
     )
 
