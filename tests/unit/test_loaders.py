@@ -100,16 +100,11 @@ def test_harmbench_drops_chemical_biological_category(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_agentdojo_emits_canonical_patterns(tmp_path: Path) -> None:
-    loader = AgentDojoLoader(cache_root=tmp_path)
-    loader.download()
-    kept, stats = loader.load()
-    assert stats.raw_count >= 20
-    assert stats.kept_count == stats.raw_count  # nothing in this set should trip the filter
-    assert stats.excluded_count == 0
-    categories = {c.category for c in kept}
-    assert "prompt_injection_indirect" in categories
-    assert "data_exfiltration" in categories
+def test_agentdojo_loader_is_in_registry() -> None:
+    """Authentic AgentDojo behavior is now in tests/unit/test_agentdojo_loader.py.
+    Here we just confirm the registry wiring still works."""
+    assert "agentdojo" in LOADERS
+    assert LOADERS["agentdojo"] is AgentDojoLoader
 
 
 # ---------------------------------------------------------------------------
