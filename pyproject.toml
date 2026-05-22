@@ -57,6 +57,8 @@ dev = [
   "pre-commit>=4.0",
   # exercised by tests/unit/test_inspect_export.py (CI runs the exporter test)
   "inspect-ai>=0.3.224",
+  # scripts/plot_results.py — regenerates the README results figure
+  "matplotlib>=3.8",
   # types
   "types-PyYAML",
 ]
