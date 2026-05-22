@@ -27,6 +27,8 @@ refusal, not the safety outcome. The open risk these static benchmarks
 under-measure is the **full agentic loop** — interactive, multi-step tool use —
 which is named explicitly as future work, not quietly omitted.
 
+![Attack success rate across all 12 evaluation cells — point estimate with 95% bootstrap confidence interval. Ten of the twelve cells sit at 0%; the two non-zero cells are the AdvBench Llama baseline at 1% and the AgentDojo Llama baseline at 4%.](docs/results_matrix.png)
+
 ### AdvBench — direct attacks (n = 100 per cell)
 
 | Target | Baseline ASR | Full-stack ASR |
