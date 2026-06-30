@@ -1,0 +1,98 @@
+# Roadmap — from harness to benchmark foundry
+
+This document is the forward-looking companion to [`METHODOLOGY.md`](../METHODOLOGY.md)
+(which is the source of truth for everything already *measured*). It describes
+where `llm-redteam-harness` is going and what is — and is **not** — built yet.
+
+## The two-layer thesis
+
+Modern LLM safety needs two distinct things, and most projects blur them:
+
+1. **High-quality adversarial benchmarks** — discovered, validated, scored for
+   staleness, and packaged. ← *this repo*
+2. **Production release gates** — incident replay, policy-as-code, ship/warn/block
+   evidence. ← a separate deployment layer (`agent-release-gates`, companion project)
+
+`llm-redteam-harness` is the **upstream research layer**. It does not decide
+whether an agent ships; it produces audited adversarial evidence and challenge
+packs that a downstream release gate can consume. See the README's
+[Positioning](../README.md#positioning) section.
+
+> **Validate the benchmark before you trust the gate.**
+
+## Why the pivot
+
+The v1 headline finding — published static attacks succeed 0–4% on 2026-era
+models, and prompt-only defences do not move that — is itself the motivating
+signal. A near-zero ASR is ambiguous: it can mean a robust model *or* a stale
+benchmark, and ASR alone cannot tell them apart. Measuring that difference —
+benchmark quality, staleness, defence sensitivity, multilingual robustness — is
+the contribution this layer specialises in.
+
+## What already exists (reuse, don't rebuild)
+
+| Foundry capability | Backing code today | State |
+| --- | --- | --- |
+| ASR / defence measurement with bootstrap CIs | `orchestrator.py`, `stats.py` | shipped |
+| Judge reliability (cross-judge κ / Krippendorff α) | `scorers/`, `orchestrator.py` | shipped |
+| Corpus loaders + safety exclusion filter | `corpora/`, `corpora/_filters.py` | shipped |
+| 6 composable defences | `defences/` | shipped |
+| Inspect AI eval-log export | `inspect_export.py` | shipped |
+| Ethics posture + redaction | `ETHICS.md`, exclusion-filter tests | shipped |
+
+## Phased plan
+
+Each phase is one PR with green CI. Phase 0 is complete.
+
+### Phase 0 — Stabilise & re-anchor — **done**
+- Closed three exclusion-filter leaks (WMD "synthesis" noun, self-harm
+  phrasings, case-insensitive category gate) + regression tests.
+- Correctness fixes: Krippendorff α finite-sample correction, `compute_kappa`
+  blank-cell guard, cross-judge `None`-vs-`0.0`.
+- **0b:** this positioning/roadmap pass.
+
+### Phase 1 — Corpus quality layer
+- Exact + near-duplicate detection, **cross-corpus** (the loaders share many
+  near-identical goals today with no dedup).
+- Language detection, attack-family / harm-category tagging, label-quality checks.
+- `redteam corpus audit` → `corpus_quality_report.md` + `corpus_datacard.md`.
+
+### Phase 2 — Staleness & usefulness
+- Compose existing ASR / CI / cross-judge / defence-sensitivity signals into a
+  **heuristic** `staleness_score` (clearly labelled heuristic, components broken
+  out — never a single magic number).
+- `redteam corpus staleness` → per-corpus report. The current 0–4% matrix
+  becomes the worked example.
+
+### Phase 3 — Defence comparison + safe-usefulness
+- Build the **benign control set** → false-refusal rate (defined in the harness,
+  not yet measured — see `METHODOLOGY.md` §9).
+- `safe_usefulness = low ASR + high benign utility`; `redteam compare-defences`
+  report with cost/latency.
+
+### Phase 4 — Multilingual adversarial corpus *(distinctive contribution)*
+- zh-Hant / zh-Hans / ja / ko + code-switching + translation-jailbreak items;
+  language-specific false-refusal; multilingual judge reliability.
+
+### Phase 5 — Challenge-pack exporter
+- `pack.yaml` + `scenarios.jsonl` + `datacard.md`, redaction rules, safety
+  caveats. Export only — **no** release-decision logic here.
+
+### Phase 6 — Bridge to a release-gate layer *(only once that layer exists)*
+- One sample pack + a docs note on the two-layer workflow.
+
+## Known follow-up hardening (not blocking)
+
+Tracked from the Phase-0 review, to slot in as small PRs:
+
+- Budget reservation under concurrency (cap enforceable per-run, not just per-call).
+- Llama Guard pre/post filter should fail **closed** on an empty/errored verdict.
+- OpenAI adapter + pricing (currently an unwired stub).
+- Delimiter-escaping in spotlighting / SecAlign (own-marker injection).
+- Judge cache-hit cost-reporting semantics.
+
+## Out of scope (belongs in the release-gate layer)
+
+Production release dashboards; ship/warn/block logic; deployment approval
+workflows; policy-as-code gates; CI release blocking; full incident-replay
+dashboard; release audit packs.
