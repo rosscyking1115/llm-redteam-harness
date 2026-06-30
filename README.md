@@ -9,6 +9,32 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/release/python-3130/)
 
+## Positioning
+
+`llm-redteam-harness` is being built into an upstream **adversarial benchmark
+foundry** for LLM safety: a research layer that validates adversarial corpora,
+measures defence impact, and studies whether published benchmarks still measure
+real deployment risk — then (on the roadmap) exports safe, versioned challenge
+packs for downstream release-gating systems to consume.
+
+It deliberately does **not** make production release decisions. Ship / warn /
+block, incident replay, and policy-as-code gates belong in a separate
+deployment layer — see [Relationship to agent-release-gates](#relationship-to-agent-release-gates).
+
+> **Validate the benchmark before you trust the gate.**
+
+| | This repo (research layer) | A release-gate layer |
+| --- | --- | --- |
+| Job | Discover, validate, and package adversarial benchmarks | Replay incidents, apply policy, decide ship/warn/block |
+| Output | Audited corpora, judge-validated ASR/defence measurements, challenge packs | Deployment evidence, release decisions |
+| Question it answers | "Is this benchmark still meaningful, and how much do I trust the score?" | "Is this agent safe to ship right now?" |
+
+**Status, honestly:** the v1 matrix below is the measurement core —
+judge-validated ASR/defence evaluation with cross-judge reliability, shipped and
+reproducible. The foundry layer (corpus audit, staleness scoring, multilingual
+corpus, challenge-pack export) is **roadmap, not yet built**; see
+[`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ## Headline finding
 
 Across **2 target models**, **2 benchmark families**, and up to **4 composable
@@ -48,6 +74,19 @@ percentile-bootstrap confidence intervals. Cross-judge κ on ASR = +1.00 for
 every cell. Full numbers, validation, and limits in
 [`METHODOLOGY.md`](./METHODOLOGY.md).
 
+### A near-zero ASR is a result about the *benchmark*, not just the model
+
+A static attack that no longer succeeds tells you one of two things, and ASR
+alone cannot distinguish them: the model is genuinely robust, or the benchmark
+is **stale** — its prompts no longer represent real deployment risk against
+2026-era instruction tuning. Reading "0% ASR" as "the model is safe" is exactly
+the inference this project is built to resist. The cross-judge layer already
+shows these published static suites measuring something increasingly degenerate
+(perfect ASR agreement at near-zero ASR; a refusal axis that is *ill-posed* for
+indirect injection). Turning that into a reproducible **benchmark-staleness**
+measurement — and packaging the attacks that still bite into challenge packs —
+is the foundry direction in [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ## Why this reports ASR and not refusal rate
 
 The harness was built to report how trustworthy its own metrics are. The
@@ -78,9 +117,12 @@ A reproducible benchmark that:
 
 ## Status
 
-The v1 evaluation matrix is complete and the harness is feature-complete for
-v1 scope. The next tracks — the full AgentDojo agent loop, multi-turn attacks,
-and Inspect AI export — are listed in [`METHODOLOGY.md`](./METHODOLOGY.md) §12.
+The v1 evaluation matrix is complete and the measurement core is feature-complete
+for v1 scope; Inspect AI export has since shipped (see below). The next tracks
+split into two directions: **deepening the measurement** (the full AgentDojo
+agent loop, multi-turn attacks — [`METHODOLOGY.md`](./METHODOLOGY.md) §12) and
+**building the benchmark-foundry layer** (corpus audit, staleness scoring,
+multilingual corpus, challenge-pack export — [`docs/ROADMAP.md`](docs/ROADMAP.md)).
 
 ## Getting started
 
@@ -139,6 +181,25 @@ See `PROJECT-1-KIT.md` §6 for the target layout. `src/redteam/` holds the
 schemas, corpus loaders, target adapters, defences, orchestrator, scorers, and
 CLI; `configs/` holds run configs and pinned dataset versions; `results/` holds
 run artifacts (gitignored — re-creatable from configs).
+
+## Relationship to agent-release-gates
+
+This repository is the upstream **adversarial benchmark layer**: it validates
+static attack corpora, measures defence stacks, scores its own reliability, and
+(on the roadmap) exports safe challenge packs.
+
+Production release decisions — incident replay, policy-as-code gates, deployment
+evidence, and ship / warn / block recommendations — are deliberately out of
+scope here. A useful mental model:
+
+- `llm-redteam-harness` discovers, validates, and packages adversarial scenarios.
+- a release-gate layer (`agent-release-gates`) consumes selected scenarios as
+  regression and release-readiness checks.
+
+Keeping the two layers separate is intentional: a benchmark research tool should
+not be the thing that decides whether an agent ships, and a release gate is only
+as trustworthy as the benchmarks feeding it. (`agent-release-gates` is a
+companion project; this section documents the intended split.)
 
 ## Ethics
 
