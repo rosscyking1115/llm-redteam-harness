@@ -1,9 +1,9 @@
 # llm-redteam-harness
 
-> A reproducible harness for measuring how published LLM defences change the
-> attack success rate of published adversarial prompts — and for measuring how
-> much to trust those numbers. Built as a measurement tool, not a weapon — see
-> [`ETHICS.md`](./ETHICS.md).
+> An **adversarial benchmark foundry** for LLM safety: audit attack corpora,
+> measure defence impact, score benchmark *staleness*, test multilingual
+> over-refusal, and export safe challenge packs — all with judge-validated,
+> reproducible numbers. A measurement tool, not a weapon (see [`ETHICS.md`](./ETHICS.md)).
 
 [![CI](https://github.com/rosscyking1115/llm-redteam-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/rosscyking1115/llm-redteam-harness/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
@@ -11,15 +11,14 @@
 
 ## Positioning
 
-`llm-redteam-harness` is being built into an upstream **adversarial benchmark
-foundry** for LLM safety: a research layer that validates adversarial corpora,
-measures defence impact, and studies whether published benchmarks still measure
-real deployment risk — then (on the roadmap) exports safe, versioned challenge
-packs for downstream release-gating systems to consume.
+`llm-redteam-harness` is the upstream **research layer** of a two-layer AI-safety
+stack. It validates adversarial corpora, measures defence effectiveness, studies
+whether published benchmarks still measure real deployment risk, and exports safe
+challenge packs for downstream release-gating systems to consume.
 
 It deliberately does **not** make production release decisions. Ship / warn /
-block, incident replay, and policy-as-code gates belong in a separate
-deployment layer — see [Relationship to agent-release-gates](#relationship-to-agent-release-gates).
+block, incident replay, and policy-as-code gates belong in a separate deployment
+layer — see [Relationship to agent-release-gates](#relationship-to-agent-release-gates).
 
 > **Validate the benchmark before you trust the gate.**
 
@@ -27,102 +26,46 @@ deployment layer — see [Relationship to agent-release-gates](#relationship-to-
 | --- | --- | --- |
 | Job | Discover, validate, and package adversarial benchmarks | Replay incidents, apply policy, decide ship/warn/block |
 | Output | Audited corpora, judge-validated ASR/defence measurements, challenge packs | Deployment evidence, release decisions |
-| Question it answers | "Is this benchmark still meaningful, and how much do I trust the score?" | "Is this agent safe to ship right now?" |
+| Question | "Is this benchmark still meaningful, and how much do I trust the score?" | "Is this agent safe to ship right now?" |
 
-**Status, honestly:** the v1 matrix below is the measurement core —
-judge-validated ASR/defence evaluation with cross-judge reliability, shipped and
-reproducible. The foundry layer (corpus audit, staleness scoring, multilingual
-corpus, challenge-pack export) is **roadmap, not yet built**; see
-[`docs/ROADMAP.md`](docs/ROADMAP.md).
+## What it does
+
+- **Runs published adversarial prompts** (AdvBench, JailbreakBench, HarmBench,
+  AgentDojo — each pinned to an upstream commit) against target LLMs through
+  composable, togglable defence stacks, and reports attack-success rate (ASR)
+  with bootstrap confidence intervals and real API cost.
+- **Validates its own numbers**: every verdict is scored by an LLM judge and
+  re-scored by an independent second judge; agreement (Cohen's κ, Krippendorff's
+  α) is a first-class output.
+- **Audits corpus quality**: exact + near-duplicate detection (including
+  cross-source overlap), language/script coverage, attack-family markers, and
+  label-integrity checks → a quality report and a data card.
+- **Scores benchmark staleness**: a transparent, component-broken-out heuristic
+  answering "is this a robust model, or a stale benchmark?".
+- **Measures over-blocking**: a benign control set (English + Traditional/
+  Simplified Chinese, Japanese, Korean, and code-switched) yields false-refusal
+  rate (FRR) and a combined *safe-usefulness* score per defence.
+- **Exports challenge packs**: versioned, self-describing fixtures a downstream
+  release gate can consume — with adversarial prompts redacted by default.
+- **Interoperates**: any run exports to a
+  [UK AISI Inspect](https://inspect.aisi.org.uk/) eval log.
 
 ## Headline finding
 
 Across **2 target models**, **2 benchmark families**, and up to **4 composable
-defence configurations** — 12 evaluation cells in total — published adversarial
-prompts succeed between **0% and 4%** of the time, and a paranoid prompt-only
-defence stack does **not** measurably move that number.
-
-Every attack-success verdict is scored by an LLM judge and then independently
-re-scored by a second judge model. Judge agreement on attack success is
-**perfect — Cohen's κ = +1.00 in all 12 cells.**
-
-The honest reading: 2026-era instruction tuning already neutralises these
-published, *static* attacks on both a frontier model (Claude Sonnet 4.6) and a
-small local model (Llama 3.1 8B). Prompt-only defences change the *style* of a
-refusal, not the safety outcome. The open risk these static benchmarks
-under-measure is the **full agentic loop** — interactive, multi-step tool use —
-which is named explicitly as future work, not quietly omitted.
+defence configurations** (12 evaluation cells), published adversarial prompts
+succeed between **0% and 4%** of the time, and a paranoid prompt-only defence
+stack does **not** measurably move that number. Judge agreement on attack
+success is perfect — **Cohen's κ = +1.00 in all 12 cells**.
 
 ![Attack success rate across all 12 evaluation cells — point estimate with 95% bootstrap confidence interval. Ten of the twelve cells sit at 0%; the two non-zero cells are the AdvBench Llama baseline at 1% and the AgentDojo Llama baseline at 4%.](docs/results_matrix.png)
 
-### AdvBench — direct attacks (n = 100 per cell)
-
-| Target | Baseline ASR | Full-stack ASR |
-| --- | ---: | ---: |
-| Claude Sonnet 4.6 | 0% [0, 0] | 0% [0, 0] |
-| Llama 3.1 8B (local) | 1% [0, 3] | 0% [0, 0] |
-
-### AgentDojo — static indirect injection (n = 50 per cell)
-
-| Target | Baseline | + Spotlighting | + SecAlign | Full prompt stack |
-| --- | ---: | ---: | ---: | ---: |
-| Claude Sonnet 4.6 | 0% | 0% | 0% | 0% |
-| Llama 3.1 8B (local) | 4% [0, 10] | 0% | 0% | 0% |
-
-All figures are attack success rate (ASR) from the LLM judge; brackets are 95%
-percentile-bootstrap confidence intervals. Cross-judge κ on ASR = +1.00 for
-every cell. Full numbers, validation, and limits in
-[`METHODOLOGY.md`](./METHODOLOGY.md).
-
-### A near-zero ASR is a result about the *benchmark*, not just the model
-
-A static attack that no longer succeeds tells you one of two things, and ASR
-alone cannot distinguish them: the model is genuinely robust, or the benchmark
-is **stale** — its prompts no longer represent real deployment risk against
-2026-era instruction tuning. Reading "0% ASR" as "the model is safe" is exactly
-the inference this project is built to resist. The cross-judge layer already
-shows these published static suites measuring something increasingly degenerate
-(perfect ASR agreement at near-zero ASR; a refusal axis that is *ill-posed* for
-indirect injection). Turning that into a reproducible **benchmark-staleness**
-measurement — and packaging the attacks that still bite into challenge packs —
-is the foundry direction in [`docs/ROADMAP.md`](docs/ROADMAP.md).
-
-## Why this reports ASR and not refusal rate
-
-The harness was built to report how trustworthy its own metrics are. The
-cross-judge layer found that **ASR is well-posed and `refusal_rate` is not**:
-the two judges agree perfectly on whether an attack succeeded, but disagree —
-sometimes worse than chance — on whether a response was a "refusal", because an
-indirect-injection task has two things that can be refused (the user's request
-and the injected instruction). `refusal_rate` is therefore reported as a
-*descriptive* signal of response style only. This is documented, not hidden —
-see [`METHODOLOGY.md`](./METHODOLOGY.md) §7.
-
-## What this is
-
-A reproducible benchmark that:
-
-1. Loads published adversarial prompts from AdvBench, JailbreakBench,
-   HarmBench, and AgentDojo, each pinned to an upstream commit.
-2. Sends them through 2 target LLMs — Claude Sonnet 4.6 (frontier) and
-   Llama 3.1 8B (local, via Ollama).
-3. Toggles composable defence stacks on and off — paranoid system prompt,
-   Constitutional critique-and-revise, Spotlighting, SecAlign-style structured
-   queries (Llama Guard 4 pre/post-filters are implemented but excluded from
-   the v1 matrix; see `METHODOLOGY.md` §4).
-4. Scores responses with a rule-based pre-screen, then an LLM judge, then an
-   independent cross-judge for validation.
-5. Reports ASR with bootstrap confidence intervals, inter-judge agreement
-   (Cohen's κ, Krippendorff's α), and real API cost per run.
-
-## Status
-
-The v1 evaluation matrix is complete and the measurement core is feature-complete
-for v1 scope; Inspect AI export has since shipped (see below). The next tracks
-split into two directions: **deepening the measurement** (the full AgentDojo
-agent loop, multi-turn attacks — [`METHODOLOGY.md`](./METHODOLOGY.md) §12) and
-**building the benchmark-foundry layer** (corpus audit, staleness scoring,
-multilingual corpus, challenge-pack export — [`docs/ROADMAP.md`](docs/ROADMAP.md)).
+> [!NOTE]
+> A near-zero ASR is a result about the **benchmark**, not just the model. It
+> can mean the model is robust *or* the benchmark is stale — and ASR alone
+> cannot tell them apart. Measuring that difference (staleness, defence
+> sensitivity, multilingual over-refusal) is what this foundry is for. Full
+> numbers, validation, and limits are in [`METHODOLOGY.md`](./METHODOLOGY.md).
 
 ## Getting started
 
@@ -130,93 +73,126 @@ multilingual corpus, challenge-pack export — [`docs/ROADMAP.md`](docs/ROADMAP.
 git clone https://github.com/rosscyking1115/llm-redteam-harness.git
 cd llm-redteam-harness
 uv venv --python 3.13
-source .venv/bin/activate           # macOS/Linux
-# .venv\Scripts\activate            # Windows PowerShell
+source .venv/bin/activate            # macOS/Linux
+# .venv\Scripts\activate             # Windows PowerShell
 uv pip install -e ".[dev]"
-cp .env.example .env                # fill in ANTHROPIC_API_KEY
+cp .env.example .env                 # fill in ANTHROPIC_API_KEY
 pre-commit install
-pytest tests/unit                   # should pass green
-python -m redteam version           # prints 0.1.0
+pytest tests/unit                    # should pass green
+redteam version                      # prints 0.1.0
 ```
 
-The CLI is invoked as `python -m redteam ...`. Each run enforces a hard USD
-budget cap (set per config in `configs/`); set a matching console cap before
-the first run.
+The CLI is `redteam ...` (equivalently `python -m redteam ...`).
+
+> [!WARNING]
+> Live runs call paid APIs. Each run enforces a hard USD budget cap (set per
+> config in `configs/`), and the judge/target adapters enforce a per-call cap —
+> but set a matching **console budget cap** before your first run anyway.
+
+## Commands
+
+### Benchmark research (the foundry) — offline, no API key
+
+These analyse corpora and existing run artifacts; they need cached corpora but
+no live model calls.
 
 ```bash
-python -m redteam corpora download           # fetch + pin corpora
-python -m redteam run --config configs/run_anthropic_baseline.yaml
-python -m redteam score --run results/<run>.json
-python -m redteam cross-judge --run results/<run>.judged.json
+# Audit corpora: duplicates, cross-source overlap, language + attack-family
+# coverage, label issues -> quality report + data card + JSON.
+redteam corpora audit --output reports/corpus_audit/
+
+# Score benchmark staleness (heuristic). Pass --run for evaluation JSONs to
+# light up the run-based components (universal-low-ASR, defence-insensitivity,
+# judge-disagreement); corpus-only otherwise.
+redteam corpora staleness --only agentdojo --run results/<run>.cross-judged.json
+
+# Compare defences on ASR, false-refusal rate, safe-usefulness, cost, latency.
+redteam compare-defences --run results/<adv>.judged.json --benign-run results/<benign>.json
+
+# False-refusal rate broken down by language (over a benign run).
+redteam frr-by-language --run results/<benign_multilingual>.json
+
+# Export a versioned challenge pack (adversarial prompts redacted by default).
+redteam export-pack --pack-id my-pack --only advbench
+
+# Write the benign control sets to JSONL for inspection / running.
+redteam benign export                 # English control set
+redteam benign export --multilingual  # zh-Hant/zh-Hans/ja/ko + code-switch
 ```
 
-## Inspect AI compatibility
-
-Any run exports to a [UK AI Security Institute Inspect](https://inspect.aisi.org.uk/)
-eval log, so results open in `inspect view` or load with `read_eval_log()`:
+### Measurement core — needs an API key / local Ollama
 
 ```bash
-uv pip install -e ".[inspect]"     # optional extra
-python -m redteam export-inspect --run results/<run>.json
+redteam corpora download                                   # fetch + pin corpora
+redteam run --config configs/run_anthropic_baseline.yaml   # evaluate
+redteam score --run results/<run>.json                     # LLM-judge scoring
+redteam cross-judge --run results/<run>.judged.json        # second judge + agreement
+redteam export-inspect --run results/<run>.json            # UK AISI Inspect log
 ```
 
-Each case maps to an Inspect sample scored by the LLM-judge ASR verdict;
-cross-judge agreement, confidence intervals, and cost travel in the metadata.
+Run `redteam --help` for the full command list; every sub-command has `--help`.
 
-## Running CI locally before pushing
+## Why this reports ASR and not refusal rate
 
-`scripts/ci_local.ps1` (Windows) and `scripts/ci_local.sh` (Linux/macOS) run
-the **exact** same checks as `.github/workflows/ci.yml` — ruff lint, ruff
-format check, mypy, pytest. Activate the venv, then:
-
-```powershell
-scripts\ci_local.ps1
-```
-
-If it exits green, CI on the PR will be green too.
-
-## Repository layout
-
-See `PROJECT-1-KIT.md` §6 for the target layout. `src/redteam/` holds the
-schemas, corpus loaders, target adapters, defences, orchestrator, scorers, and
-CLI; `configs/` holds run configs and pinned dataset versions; `results/` holds
-run artifacts (gitignored — re-creatable from configs).
+The cross-judge layer found that **ASR is well-posed and `refusal_rate` is not**:
+the two judges agree perfectly on whether an attack succeeded, but disagree —
+sometimes worse than chance — on whether a response was a "refusal", because an
+indirect-injection task has two things that can be refused (the user's request
+and the injected instruction). `refusal_rate` is therefore reported as a
+*descriptive* signal of response style only, never as a safety metric. This is
+documented, not hidden — see [`METHODOLOGY.md`](./METHODOLOGY.md) §7.
 
 ## Relationship to agent-release-gates
 
 This repository is the upstream **adversarial benchmark layer**: it validates
 static attack corpora, measures defence stacks, scores its own reliability, and
-(on the roadmap) exports safe challenge packs.
-
-Production release decisions — incident replay, policy-as-code gates, deployment
-evidence, and ship / warn / block recommendations — are deliberately out of
-scope here. A useful mental model:
+exports safe challenge packs. Production release decisions — incident replay,
+policy-as-code gates, deployment evidence, and ship / warn / block
+recommendations — are deliberately out of scope. A useful mental model:
 
 - `llm-redteam-harness` discovers, validates, and packages adversarial scenarios.
 - a release-gate layer (`agent-release-gates`) consumes selected scenarios as
   regression and release-readiness checks.
 
-Keeping the two layers separate is intentional: a benchmark research tool should
-not be the thing that decides whether an agent ships, and a release gate is only
-as trustworthy as the benchmarks feeding it. (`agent-release-gates` is a
-companion project; this section documents the intended split.)
+A benchmark research tool should not be the thing that decides whether an agent
+ships, and a release gate is only as trustworthy as the benchmarks feeding it.
+(`agent-release-gates` is a companion project; this section documents the
+intended split.)
 
 ## Ethics
 
-This project uses **only** published adversarial prompts. Excluded categories
-(CSAM, weapons-of-mass-destruction synthesis, detailed self-harm methods) are
-filtered at corpus-load time and verified by a CI test. Results are aggregate —
-no raw harmful outputs are committed to this repo.
+> [!IMPORTANT]
+> This project uses **only** published adversarial prompts and does not generate
+> novel jailbreaks in any language. Excluded categories (CSAM,
+> weapons-of-mass-destruction synthesis, detailed self-harm methods) are
+> filtered at corpus-load time and verified by a CI test. Results are aggregate;
+> exported adversarial prompts are redacted. The multilingual work is
+> benign-only. Full policy in [`ETHICS.md`](./ETHICS.md).
 
-If you are a model provider whose model is included and want example
-transcripts removed, email **rosscyking@gmail.com** — **24-hour removal
-commitment**. See [`ETHICS.md`](./ETHICS.md).
+If you are a model provider whose model is included and want example transcripts
+removed, email **rosscyking@gmail.com** — **24-hour removal commitment**.
+
+## Development
+
+`scripts/ci_local.ps1` (Windows) and `scripts/ci_local.sh` (Linux/macOS) run the
+**exact** same checks as CI — ruff lint, ruff format check, mypy, pytest. Green
+locally means green on the PR. Run artifacts (`results/`), audit outputs
+(`reports/`), and non-sample packs (`challenge_packs/`) are gitignored — all
+re-creatable from configs.
+
+## Documentation
+
+| File | What's in it |
+| --- | --- |
+| [`METHODOLOGY.md`](./METHODOLOGY.md) | Source of truth for every reported number; metric validation; limits |
+| [`ETHICS.md`](./ETHICS.md) | Excluded categories, redaction, disclosure, provider ToS |
+| [`docs/ROADMAP.md`](./docs/ROADMAP.md) | The foundry pivot, phase status, and follow-up hardening |
 
 ## Citation
 
-```
+```bibtex
 @software{llm_redteam_harness_2026,
-  title  = {llm-redteam-harness: Reproducible LLM defence evaluation},
+  title  = {llm-redteam-harness: An adversarial benchmark foundry for LLM safety},
   author = {Ross},
   year   = {2026},
   url    = {https://github.com/rosscyking1115/llm-redteam-harness}
