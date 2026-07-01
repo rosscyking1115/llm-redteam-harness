@@ -45,8 +45,9 @@ coverage.xml
 # Corpus-audit outputs (quality reports / data cards). Re-creatable via
 # `redteam corpora audit`, and they quote truncated adversarial prompt
 # previews, so keep them out of git by default.
-/reports/
-!/reports/.gitkeep
+# `/reports/*` (not `/reports/`) so the samples/ negation can re-include —
+# git won't recurse into a wholly-excluded directory.
+/reports/*
 !/reports/samples/
 
 # Exported challenge packs. Re-creatable via `redteam export-pack`; adversarial
