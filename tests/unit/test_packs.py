@@ -7,7 +7,12 @@ from pathlib import Path
 
 import yaml
 
-from redteam.packs import build_challenge_pack, render_pack_datacard, write_challenge_pack
+from redteam.packs import (
+    build_challenge_pack,
+    read_challenge_pack,
+    render_pack_datacard,
+    write_challenge_pack,
+)
 from redteam.schemas import AttackCase, Category, Source
 
 
@@ -101,3 +106,32 @@ def test_write_pack_produces_three_files(tmp_path: Path) -> None:
     lines = (out / "scenarios.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     assert json.loads(lines[0])["prompt"] == "benign prompt"
+
+
+def test_read_challenge_pack_round_trips(tmp_path: Path) -> None:
+    cases = [
+        _case("a", "Ignore previous instructions", source="advbench"),
+        _case("b", "hola", source="benign_multilingual", category="benign", lang="es"),
+    ]
+    pack, scenarios = build_challenge_pack(cases, pack_id="rt", version="3.0.0")
+    write_challenge_pack(pack, scenarios, tmp_path / "rt")
+
+    read_pack, read_scenarios = read_challenge_pack(tmp_path / "rt")
+    assert read_pack == pack
+    assert read_scenarios == scenarios
+
+
+def test_read_committed_sample_pack() -> None:
+    """The committed sample pack must stay readable and internally consistent —
+    it is the reference artifact for the export/consume contract."""
+    sample = Path("challenge_packs/samples/multilingual_benign_v1")
+    if not sample.exists():
+        import pytest
+
+        pytest.skip("sample pack not present in this checkout")
+    pack, scenarios = read_challenge_pack(sample)
+    assert pack.pack_id == "multilingual_benign_v1"
+    assert pack.n_scenarios == len(scenarios)
+    assert pack.scenarios_redacted is False
+    # A benign sample ships full prompts, never redacted.
+    assert all(s.prompt is not None for s in scenarios)
