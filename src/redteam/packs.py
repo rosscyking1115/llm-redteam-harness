@@ -205,3 +205,21 @@ def write_challenge_pack(pack: ChallengePack, scenarios: Sequence[Scenario], out
             fh.write(s.model_dump_json() + "\n")
     (out_dir / "datacard.md").write_text(render_pack_datacard(pack), encoding="utf-8")
     return out_dir
+
+
+def read_challenge_pack(pack_dir: Path) -> tuple[ChallengePack, list[Scenario]]:
+    """Read a pack written by `write_challenge_pack` — the inverse operation.
+
+    This is the entry point a downstream consumer (e.g. a release-gate layer)
+    calls to load a pack as a regression suite. See
+    `examples/export_to_agent_release_gates.md` for the consumption contract.
+    """
+    pack = ChallengePack.model_validate(
+        yaml.safe_load((pack_dir / "pack.yaml").read_text(encoding="utf-8"))
+    )
+    scenarios: list[Scenario] = []
+    for line in (pack_dir / "scenarios.jsonl").read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped:
+            scenarios.append(Scenario.model_validate_json(stripped))
+    return pack, scenarios

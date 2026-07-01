@@ -95,8 +95,17 @@ Each phase is one PR with green CI. Phase 0 is complete.
   release-decision logic here.
 - Committed sample: `challenge_packs/samples/multilingual_benign_v1/`.
 
-### Phase 6 — Bridge to a release-gate layer *(only once that layer exists)*
-- One sample pack + a docs note on the two-layer workflow.
+### Phase 6 — Bridge to a release-gate layer — **repo-side done**
+- `redteam.packs.read_challenge_pack` — the inverse of the exporter, so a
+  consumer can load a pack as a regression suite (round-trip tested against the
+  committed sample).
+- `examples/export_to_agent_release_gates.md` — the export/consume **contract**:
+  pack format, how a gate turns scenarios into checks, and what it must NOT infer
+  ("passing is not proof of safety"; re-materialise redacted prompts from the
+  pinned corpus).
+- **Deliberately no live integration.** `agent-release-gates` is a companion
+  project that isn't built here; wiring an actual end-to-end gate is out of scope
+  until that repo exists. This side of the bridge stands on its own.
 
 ## Known follow-up hardening (not blocking)
 
