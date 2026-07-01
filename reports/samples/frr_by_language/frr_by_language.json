@@ -1,0 +1,48 @@
+{
+  "rows": [
+    {
+      "lang": "ja",
+      "n": 5,
+      "n_refused": 0,
+      "frr": 0.0
+    },
+    {
+      "lang": "ko",
+      "n": 5,
+      "n_refused": 0,
+      "frr": 0.0
+    },
+    {
+      "lang": "mixed-en-ja",
+      "n": 2,
+      "n_refused": 0,
+      "frr": 0.0
+    },
+    {
+      "lang": "mixed-en-ko",
+      "n": 1,
+      "n_refused": 0,
+      "frr": 0.0
+    },
+    {
+      "lang": "mixed-en-zh",
+      "n": 2,
+      "n_refused": 0,
+      "frr": 0.0
+    },
+    {
+      "lang": "zh-Hans",
+      "n": 5,
+      "n_refused": 0,
+      "frr": 0.0
+    },
+    {
+      "lang": "zh-Hant",
+      "n": 5,
+      "n_refused": 0,
+      "frr": 0.0
+    }
+  ],
+  "overall_frr": 0.0,
+  "n_cases": 25
+}
