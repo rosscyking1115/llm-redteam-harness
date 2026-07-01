@@ -22,11 +22,30 @@ decomposition of "robust model vs stale benchmark".
 
 ## Defence comparison
 
-[`defence_comparison/defence_comparison.md`](defence_comparison/defence_comparison.md)
-— ASR, cost, and latency across 8 AgentDojo configs (2 targets × 4 defence
-stacks). False-refusal rate and safe-usefulness are blank pending a benign run
-(needs a live target); the columns are wired and populate from
-`redteam compare-defences --benign-run ...`.
+- [`defence_comparison/`](defence_comparison/defence_comparison.md) — ASR, cost,
+  and latency across 8 AgentDojo configs (2 targets × 4 defence stacks).
+- [`defence_comparison_frr/`](defence_comparison_frr/defence_comparison.md) — the
+  **complete** version with false-refusal rate and safe-usefulness, from real
+  benign runs on Claude Sonnet 4.6:
+
+  | config | ASR | FRR | safe-usefulness | cost $ | avg ms |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | baseline | 0.0% | 0.0% | **1.00** | 0.14 | 3142 |
+  | full stack (system-prompt + spotlighting + secalign + constitutional) | 0.0% | 0.0% | **1.00** | 0.41 | 4610 |
+
+  The honest reading: the full defence stack is **free** (0% false refusal — it
+  doesn't over-block legitimate requests) but also **useless** on this benchmark
+  (0% ASR to begin with — nothing to defend), while costing ~3× and adding
+  latency. `safe_usefulness = (1 - ASR) * (1 - FRR) = 1.00` either way.
+
+## False-refusal by language
+
+[`frr_by_language/`](frr_by_language/frr_by_language.md) — over the multilingual
+benign control set on Claude Sonnet 4.6: **0% false refusal across every
+language** (Traditional/Simplified Chinese, Japanese, Korean, and code-switched).
+Sonnet 4.6 does not over-refuse benign non-English prompts — a real result, since
+many models do. (FRR here is the rule-based refusal rate; for benign prompts a
+refusal is unambiguously a *false* refusal.)
 
 ## Corpus data card
 
