@@ -12,6 +12,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   just the four built-in corpora. The safety exclusion filter runs first, so an
   ad-hoc dataset can't smuggle excluded content into a report. New schema values
   `source="external"` / `category="unknown"` back it.
+- **Cross-dataset benchmark-quality scorecard** (`scripts/hf_scorecard.py`) and a
+  written finding (`docs/findings/benchmark-quality-report-card.md`) — auditing
+  four public jailbreak datasets: all English-only, roleplay-persona-dominant,
+  and duplicated to varying degrees.
 
 ## [0.2.0] — the adversarial benchmark foundry
 
