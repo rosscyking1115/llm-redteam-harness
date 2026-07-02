@@ -187,6 +187,7 @@ re-creatable from configs.
 
 | File | What's in it |
 | --- | --- |
+| [**Finding: are jailbreak benchmarks still worth running?**](./docs/findings/benchmark-quality-report-card.md) | The write-up: staleness, a cross-dataset quality scorecard, and the multilingual result |
 | [`METHODOLOGY.md`](./METHODOLOGY.md) | Source of truth for every reported number; metric validation; limits |
 | [`ETHICS.md`](./ETHICS.md) | Excluded categories, redaction, disclosure, provider ToS |
 | [`docs/ROADMAP.md`](./docs/ROADMAP.md) | The foundry pivot, phase status, and follow-up hardening |
