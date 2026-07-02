@@ -4,28 +4,11 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] — 2026-07-02 — the adversarial benchmark foundry
 
-### Changed
-- **Renamed the project/package to `redteam-foundry`** to match the pivot (was
-  `llm-redteam-harness`). The `redteam` CLI command and Python module are
-  unchanged — `pip install redteam-foundry` still gives you `redteam ...`.
-
-### Added
-- **Audit any Hugging Face dataset** (`redteam corpora audit-hf`) — point the
-  audit at any adversarial dataset on the Hub (with `--revision` to pin it), not
-  just the four built-in corpora. The safety exclusion filter runs first, so an
-  ad-hoc dataset can't smuggle excluded content into a report. New schema values
-  `source="external"` / `category="unknown"` back it.
-- **Cross-dataset benchmark-quality scorecard** (`scripts/hf_scorecard.py`) and a
-  written finding (`docs/findings/benchmark-quality-report-card.md`) — auditing
-  four public jailbreak datasets: all English-only, roleplay-persona-dominant,
-  and duplicated to varying degrees.
-
-## [0.2.0] — the adversarial benchmark foundry
-
-Repositioned from a static red-team harness into an upstream **benchmark
-foundry**. The v1 measurement core is unchanged; these are additive.
+Repositioned from a static red-team harness (`llm-redteam-harness`) into an
+upstream **benchmark foundry** (`redteam-foundry`). The v1 measurement core is
+unchanged; these are additive. First public release.
 
 ### Added
 - **Corpus quality audit** (`redteam corpora audit`) — exact + near-duplicate
@@ -45,6 +28,14 @@ foundry**. The v1 measurement core is unchanged; these are additive.
   (`pack.yaml` + `scenarios.jsonl` + `datacard.md`) with adversarial prompts
   redacted by default, plus a reader (`redteam.packs.read_challenge_pack`) and
   a downstream consumption contract (`examples/export_to_agent_release_gates.md`).
+- **Audit any Hugging Face dataset** (`redteam corpora audit-hf --dataset ...
+  --prompt-column ... [--revision ...]`) — not just the four built-in corpora;
+  the safety exclusion filter runs first. New `source="external"` /
+  `category="unknown"` schema values back it.
+- **Cross-dataset benchmark-quality scorecard** (`scripts/hf_scorecard.py`) and a
+  written finding (`docs/findings/benchmark-quality-report-card.md`) auditing four
+  public jailbreak datasets: all English-only, roleplay-persona-dominant, and
+  duplicated to varying degrees.
 - `docs/ROADMAP.md`; committed real-data findings under `reports/samples/`.
 
 ### Fixed
@@ -61,6 +52,9 @@ foundry**. The v1 measurement core is unchanged; these are additive.
   cross-judge agreement reports `None` (not `0.0`) when not computable.
 
 ### Changed
+- **Renamed the project/package to `redteam-foundry`** (was
+  `llm-redteam-harness`). The `redteam` CLI command and `src/redteam/` module are
+  unchanged — `pip install redteam-foundry` still gives you `redteam ...`.
 - Default install slimmed: the unused dashboard deps (`streamlit`, `plotly`)
   moved to an opt-in `[dashboard]` extra. The audit / staleness / dedup path
   needs no API key.
