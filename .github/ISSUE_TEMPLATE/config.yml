@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security or safety-sensitive report (private)
+    url: https://github.com/rosscyking1115/redteam-foundry/security/advisories/new
+    about: Suspected exclusion-filter leak or a vulnerability — report privately, not as a public issue. See SECURITY.md.

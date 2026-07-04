@@ -1,0 +1,23 @@
+name: Feature or audit request
+description: Propose a capability, or ask to audit a specific corpus.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The problem you're hitting, or the corpus / benchmark you'd like audited (a Hugging Face dataset id is perfect).
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed approach (optional)
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        Heads-up on scope (see [`CONTRIBUTING.md`](../blob/main/CONTRIBUTING.md)):
+        production release-gating — ship/warn/block, incident replay,
+        policy-as-code — is intentionally **out of scope** for this repo.
