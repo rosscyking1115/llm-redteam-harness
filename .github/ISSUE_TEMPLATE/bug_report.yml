@@ -1,0 +1,32 @@
+name: Bug report
+description: Something in redteam-foundry behaves incorrectly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do **not** paste raw harmful prompts or model outputs — keep it
+        aggregate/redacted. For a suspected exclusion-filter leak or any other
+        safety issue, use the **Security policy** (private report) instead — see
+        [`SECURITY.md`](../blob/main/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `redteam version` (or the commit SHA).
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command you ran, the (aggregate) output, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: false

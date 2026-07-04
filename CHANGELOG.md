@@ -10,6 +10,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Automated PyPI releases via Trusted Publishing** (`.github/workflows/publish.yml`)
   — publishing a GitHub Release builds and uploads to PyPI over OIDC, with no
   stored token; the job also verifies the tag matches the package version.
+- Community-health files: `SECURITY.md` (private reporting for vulnerabilities
+  and suspected exclusion-filter leaks), `CODE_OF_CONDUCT.md` (Contributor
+  Covenant 2.1), GitHub issue forms + a PR template.
 
 ### Changed
 - The benchmark-quality scorecard datasets are now **pinned to commit SHAs**
