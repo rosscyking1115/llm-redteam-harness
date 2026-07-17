@@ -1,6 +1,6 @@
 """LLM red-team evaluation harness.
 
-See PROJECT-1-KIT.md and METHODOLOGY.md for the build plan and methodology.
+See METHODOLOGY.md for the methodology.
 This package is intentionally thin in Phase 0 — substantive modules land in
 Phase 1 (schemas + corpora) onward.
 """

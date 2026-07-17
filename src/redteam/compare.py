@@ -4,7 +4,7 @@ Turns a set of evaluation runs into a per-defence-config comparison: attack
 success rate (ASR), false-refusal rate (FRR) on the benign control set,
 combined **safe usefulness**, and the cost/latency of each config.
 
-The core principle (METHODOLOGY §5, kit Lesson L5): a defence is not good just
+The core principle (METHODOLOGY §5): a defence is not good just
 because it blocks attacks — it must also leave legitimate requests answerable.
 
     safe_usefulness = (1 - ASR) * (1 - FRR)

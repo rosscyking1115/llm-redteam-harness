@@ -11,8 +11,8 @@ corpus-load time. This test asserts:
   (c) Source-category exclusions trigger before the regex layer (so a
       labelled drop is recorded as the labelled topic, not a regex hit).
 
-If this test ever goes red, do NOT merge. The acceptance criterion in
-PROJECT-1-KIT.md section 10 depends on it.
+If this test ever goes red, do NOT merge — the exclusion-filter safety
+guarantee depends on it.
 """
 
 from __future__ import annotations

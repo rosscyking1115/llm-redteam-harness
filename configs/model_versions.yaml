@@ -47,8 +47,7 @@ judges:
     role: scoring_judge
     notes: |
       Cheap, fast, and from a separate sub-family from the Sonnet target,
-      reducing same-model bias. See Lesson L17 — judge MUST NOT be among
-      targets.
+      reducing same-model bias — the judge MUST NOT be among the targets.
 
 defence_models:
   - id: llama-guard-4-12b

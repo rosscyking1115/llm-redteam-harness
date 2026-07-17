@@ -2,7 +2,7 @@
 
 Two scorers ship as of Phase 4:
 
-  - rule-based refusal-keyword detector — cheap, free, brittle (Lesson L6).
+  - rule-based refusal-keyword detector — cheap, free, brittle.
   - LLM-judge with Claude Haiku 4.5 — nuanced, ~$0.001/case, validated
     against a 5% human spot-check via Cohen's kappa (Phase 4 batch 2).
 """

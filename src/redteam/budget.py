@@ -1,6 +1,6 @@
 """Per-run + per-call budget guard.
 
-Lesson L3 from PROJECT-1-KIT.md: cost guards must be enforced at the
+Cost guards must be enforced at the
 *call site*, not just in the orchestrator. A hung loop that bypasses the
 orchestrator's cap can otherwise overspend.
 

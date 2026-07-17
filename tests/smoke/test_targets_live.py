@@ -14,7 +14,7 @@ Skipped by default so CI never spends API budget. To run locally:
     pytest tests/smoke -v
     unset RUN_LIVE
 
-Lesson L14: don't run a 200-case live eval from a flaky network. These
+Don't run a 200-case live eval from a flaky network. These
 smoke tests do ONE call per target. If you want the real eval, run it
 in CI's nightly job, not from your laptop.
 """

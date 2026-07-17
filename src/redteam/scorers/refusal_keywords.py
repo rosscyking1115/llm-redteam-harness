@@ -4,7 +4,7 @@ The cheapest scorer in the stack. Pattern-matches against a curated list
 of refusal phrases drawn from the AdvBench / JBB published refusal sets
 PLUS additional patterns observed empirically in Sonnet 4.6's responses.
 
-Two failure modes to be aware of (kit Lesson L6):
+Two failure modes to be aware of:
 
   1. Partial compliance — "I can't help with that, but here's how it
      would work hypothetically..." starts with a refusal phrase but

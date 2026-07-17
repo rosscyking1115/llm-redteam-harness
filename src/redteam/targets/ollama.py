@@ -4,7 +4,7 @@ Talks to Ollama's HTTP API at OLLAMA_HOST (default http://localhost:11434).
 Uses httpx + tenacity for connection retry — Ollama itself is fast once
 warm, but the first request after model load can take 5-30s.
 
-Lesson L10: Ollama is finicky. If `ollama serve` isn't running, every call
+Ollama is finicky: if `ollama serve` isn't running, every call
 fails with no clear error. The constructor pings /api/tags as a healthcheck
 so the failure mode is loud and early.
 """

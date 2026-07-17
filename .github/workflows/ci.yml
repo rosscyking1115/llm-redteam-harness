@@ -7,7 +7,7 @@ on:
 
 # No real API calls are made in CI — see ETHICS + budget guards.
 # When branch protection is enabled, require the display name below
-# ("Lint, typecheck, smoke run") — see Lesson L13.
+# ("Lint, typecheck, smoke run").
 
 jobs:
   build:

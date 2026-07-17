@@ -56,6 +56,6 @@ def cost_for(model_version: str, input_tokens: int, output_tokens: int) -> Decim
 def estimate_cost(model_version: str, input_tokens: int, max_output_tokens: int) -> Decimal:
     """Worst-case cost estimate: assume the model emits max_output_tokens.
 
-    Used by Target.send() for the pre-call budget check (Lesson L3 — the
-    estimate trips the budget cap before we hit the API)."""
+    Used by Target.send() for the pre-call budget check — the estimate
+    trips the budget cap before we hit the API."""
     return cost_for(model_version, input_tokens, max_output_tokens)

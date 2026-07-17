@@ -1,6 +1,6 @@
 """Disk-backed response cache.
 
-Lesson L2 from PROJECT-1-KIT.md: cache every API call. Eval reruns are
+Cache every API call. Eval reruns are
 constant during development; without a cache, each tweak to the scoring
 layer would re-spend the same budget on the same prompts.
 
