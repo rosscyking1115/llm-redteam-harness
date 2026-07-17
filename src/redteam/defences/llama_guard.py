@@ -20,7 +20,7 @@ where S<n> is the violation category. We **fail closed**: only a clean
 error/garbled response from the guard — is treated as unsafe. A content
 filter that cannot get a clean read should block, not wave content through.
 
-Lesson L10 / kit notes: ensure `ollama serve` is running before the
+Ensure `ollama serve` is running before the
 target is constructed. The OllamaTarget.healthcheck() should be called
 once at orchestrator startup.
 """

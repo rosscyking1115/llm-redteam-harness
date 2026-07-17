@@ -9,7 +9,7 @@ A run config (YAML) declares:
 
 The orchestrator validates the config (Pydantic), builds the target +
 defence stack, walks the cases concurrently with bounded parallelism
-(asyncio.Semaphore — Lesson L19's documented concurrency ceiling), runs
+(asyncio.Semaphore — a documented concurrency ceiling), runs
 the rule-based refusal scorer on each response, and emits one JSON file
 under results/<run-name>-<timestamp>.json.
 
@@ -449,8 +449,8 @@ async def cross_judge_run(
     including kappa + alpha agreement between the two judges.
 
     Replaces the human spot-check as the primary judge-validation step.
-    Per kit Lesson L4: "Judges have biases. Use a third judge if you can,
-    or report results with both judges side-by-side."
+    Judges have biases: use a third judge if you can, or report results
+    with both judges side-by-side.
     """
     from redteam.budget import reset_budget
     from redteam.scorers import ClaudeJudge, JudgeError

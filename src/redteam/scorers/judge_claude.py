@@ -2,13 +2,13 @@
 
 Reads (attack_prompt, model_response) and returns a structured JudgeVerdict.
 Pinned to claude-haiku-4-5-20251001 — distinct from any evaluated target
-to satisfy Lesson L17 ("the judge MUST NOT be among the targets").
+so the judge is never among the evaluated targets.
 
 Cost: ~$0.001 per case at Haiku 4.5 pricing (1k in / 100 out average).
 For a 50-case run that's ~$0.05. The orchestrator's response cache means
 re-scoring an existing run does not re-spend on targets, only on the judge.
 
-Prompt-injection defence (kit Lesson L16)
+Prompt-injection defence
 -----------------------------------------
 The attack prompt and model response both arrive from untrusted sources.
 The judge prompt:

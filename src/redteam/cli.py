@@ -1,8 +1,8 @@
-"""Command-line interface for the red-team harness.
+"""Command-line interface for the redteam-foundry harness.
 
-Phases ship sub-commands as they land. Today: `version`, plus `corpora`
-download and list (Phase 1). Stubs for Phases 2-7 are still here so
-`redteam --help` doubles as a build roadmap.
+Run `redteam --help` for the full command list; each sub-command has its own
+`--help`. A couple of sub-commands (`report`, `smoke`) are placeholders that
+print a not-implemented notice.
 """
 
 from __future__ import annotations
@@ -43,10 +43,7 @@ _console = Console()
 
 
 def _not_yet(phase: int, command: str) -> None:
-    msg = (
-        f"`redteam {command}` is not implemented yet (lands in Phase {phase}). "
-        "See PROJECT-1-KIT.md section 7 for the build plan."
-    )
+    msg = f"`redteam {command}` is not implemented yet (lands in Phase {phase})."
     typer.echo(typer.style(msg, fg=typer.colors.YELLOW))
     raise typer.Exit(code=0)
 
@@ -1036,7 +1033,7 @@ def cross_judge_cmd(
 
     This is the primary judge-validation step in 2026 best practice (vs the
     older "5% human spot-check" — which is still valuable but slower). Per
-    kit Lesson L4: judges have biases; cross-judge agreement is the cheap,
+    Judges have biases; cross-judge agreement is the cheap,
     fast, reproducible alternative.
     """
     import asyncio

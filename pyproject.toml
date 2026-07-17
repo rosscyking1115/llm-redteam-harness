@@ -151,7 +151,7 @@ ignore_missing_imports = true
 minversion = "8.0"
 addopts = "-q --strict-markers --strict-config"
 testpaths = ["tests"]
-asyncio_mode = "auto"          # Lesson L11 — auto, not strict
+asyncio_mode = "auto"          # auto, not strict
 markers = [
   "smoke: end-to-end smoke tests (may take longer)",
   "live: tests that hit live APIs (skipped in CI; require RUN_LIVE=1)",
