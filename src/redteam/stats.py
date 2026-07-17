@@ -13,9 +13,8 @@ ST2.1 — addresses two limitations of the Phase 3/4 scoring pipeline:
   2. Cohen's kappa requires exactly two raters and breaks down on
      highly-skewed marginals (the "kappa paradox"). Krippendorff's alpha
      is the field-standard alternative for inter-rater reliability when
-     you want a single number that generalises. Anthropic Fellows /
-     AISI work cite Krippendorff's alpha near 0.8 as the bar for a
-     reliable judge.
+     you want a single number that generalises. A common convention treats
+     alpha near 0.8 as the bar for a reliable annotation signal.
 
 Pure stdlib — no numpy / scipy dependency. Bootstrap is deterministic
 via a seeded RNG so report numbers are reproducible across runs.
