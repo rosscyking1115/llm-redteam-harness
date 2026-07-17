@@ -16,7 +16,7 @@ Modern LLM safety needs two distinct things, and most projects blur them:
 `redteam-foundry` is the **upstream research layer**. It does not decide
 whether an agent ships; it produces audited adversarial evidence and challenge
 packs that a downstream release gate can consume. See the README's
-[Positioning](../README.md#positioning) section.
+[Where this sits](../README.md#where-this-sits-the-research-layer) section.
 
 > **Validate the benchmark before you trust the gate.**
 
